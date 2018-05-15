@@ -4,11 +4,14 @@
   "description": "connect to postgres db using node.js package sequelizejs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "author": "Maxim Yefremov",
   "license": "MIT",
   "dependencies": {
-    "npm": "^6.0.1"
+    "npm": "^6.0.1",
+    "pg": "^7.4.3",
+    "sequelize": "^4.37.7"
   }
 }

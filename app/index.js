@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
-const sequelize = new Sequelize('database', 'username', 'password', {
-    host: 'localhost',
-    dialect: 'postgres'|'mysql'|'sqlite'|'mssql',
+const sequelize = new Sequelize('database', 'postgres', 'example', {
+    host: 'db',
+    dialect: 'postgres',
 
     pool: {
         max: 5,
@@ -9,9 +9,6 @@ const sequelize = new Sequelize('database', 'username', 'password', {
         acquire: 30000,
         idle: 10000
     },
-
-    // SQLite only
-    storage: 'path/to/database.sqlite',
 
     // http://docs.sequelizejs.com/manual/tutorial/querying.html#operators
     operatorsAliases: false
