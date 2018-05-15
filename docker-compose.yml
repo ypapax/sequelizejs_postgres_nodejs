@@ -1,0 +1,22 @@
+# the third version of docker compose yaml syntax
+version: '3'
+services:
+    nodejs_app:
+      # relative directory to docker compose file:
+      build: ./app
+      volumes:
+        - ./app:/usr/src/app
+      ports:
+        - 8088:8080
+
+    db:
+      image: postgres
+      restart: always
+      environment:
+        POSTGRES_PASSWORD: example
+
+    adminer:
+      image: adminer
+      restart: always
+      ports:
+        - 8089:8080

@@ -1,0 +1,14 @@
+{
+  "name": "sequelizejs_client",
+  "version": "1.0.0",
+  "description": "connect to postgres db using node.js package sequelizejs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Maxim Yefremov",
+  "license": "MIT",
+  "dependencies": {
+    "npm": "^6.0.1"
+  }
+}
