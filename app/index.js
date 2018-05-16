@@ -6,7 +6,7 @@ const pg = require('pg');
 const util = require('util')
 const dbName = 'database4',
     username = 'postgres',
-    password = 'example2',
+    password = 'example',
     host = 'db'
 const config = {
     user: username,
@@ -16,21 +16,14 @@ const config = {
 // pool takes the object above -config- as parameter
 const pool = new pg.Pool(config); // https://stackoverflow.com/a/47308439/1024794
 
-function MyError(message) {
-    this.name = 'MyError';
-    this.message = message;
-    this.stack = (new Error()).stack;
-}
-MyError.prototype = new Error; // https://stackoverflow.com/a/5251506/1024794
-
 function connect() {
     return new Promise((resolve, reject) => {
         logger.info("connecting to postgres db", dbName)
         pool.connect(function (err, client, done) {
             if (err) {
-                err = MyError(err)
                 logger.trace(err)
-                return reject(err);
+                reject(err);
+                return;
             }
             return resolve(client)
         })
@@ -107,7 +100,7 @@ async function createDbInsertSelect() {
 
 createDbInsertSelect()
     .then((result) => logger.info(result))
-    .catch(err => logger.error(err))
+    .catch(err => { logger.error(err); logger.trace(err.stack)})
 
 
 const app = express()
