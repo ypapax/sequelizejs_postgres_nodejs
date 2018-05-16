@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const logger = require('tracer').colorConsole();
 const express = require("express");
+const to = require("await-to-js").to
 const pg = require('pg');
 const util = require('util')
 const dbName = 'database4',
@@ -44,11 +45,10 @@ function pgQuery(client, query) {
 }
 
 async function createDbInsertSelect() {
-    let client;
-    try {
-        client = await connect()
-    } catch (e) {
-        throw(new Error(e))
+    let client, err;
+    [err, client] = await to(connect()) // https://blog.grossman.io/how-to-write-async-await-without-try-catch-blocks-in-javascript/
+    if (err) {
+        throw new Error(err)
     }
     const result = await pgQuery(client, util.format(`select exists(
  SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower('%s')
