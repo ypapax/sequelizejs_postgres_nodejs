@@ -69,6 +69,12 @@ pool.connect(function (err, client, done) {
                 console.log(jane.toJSON());
             })
             .catch(e => logger.error(e));
+
+        User.findAll().then(users => {
+            logger.info("users", users);
+            logger.info("users.length ", users.length)
+        })
+            .catch(e => logger.error(e))
         logger.info("closing pg connection")
         pool.end(); // close the connection
     });
