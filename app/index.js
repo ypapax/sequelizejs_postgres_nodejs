@@ -22,11 +22,16 @@ pool.connect(function (err, client, done) {
         logger.error(err)
         return
     }
-    logger.info("creating db", dbName)
+    logger.info("creating db ", dbName)
     client.query('CREATE DATABASE ' + dbName, function (err) {
         if (err) {
-            logger.error(err)
-            return;
+            logger.info("err type", typeof err, JSON.stringify(err, null, "\t"));
+            if (err.toString().indexOf("already exists") > -1) {
+                logger.warn(err);
+            } else {
+                logger.error(err)
+                return;
+            }
         }
 
         //db should exist now, initialize Sequelize
