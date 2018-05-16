@@ -16,13 +16,21 @@ const config = {
 // pool takes the object above -config- as parameter
 const pool = new pg.Pool(config); // https://stackoverflow.com/a/47308439/1024794
 
+function MyError(message) {
+    this.name = 'MyError';
+    this.message = message;
+    this.stack = (new Error()).stack;
+}
+MyError.prototype = new Error; // https://stackoverflow.com/a/5251506/1024794
+
 function connect() {
     return new Promise((resolve, reject) => {
         logger.info("connecting to postgres db", dbName)
         pool.connect(function (err, client, done) {
             if (err) {
+                err = MyError(err)
                 logger.trace(err)
-                return reject(new Error(err));
+                return reject(err);
             }
             return resolve(client)
         })
@@ -99,7 +107,7 @@ async function createDbInsertSelect() {
 
 createDbInsertSelect()
     .then((result) => logger.info(result))
-    .catch((err) => logger.error(err))
+    .catch(err => logger.error(err))
 
 
 const app = express()
