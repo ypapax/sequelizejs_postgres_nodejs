@@ -29,8 +29,10 @@ function connect() {
 }
 
 function pgQuery(client, query) {
+    logger.trace("calling pgQuery")
     return new Promise((resolve, reject) => {
-        logger.trace("query to pg", query)
+        logger.trace("calling Promise in pgQuery")
+        /*logger.trace("query to pg", query)
         client.query(query, function (err, result) {
             if (err) {
                 reject(err, client)
@@ -38,7 +40,7 @@ function pgQuery(client, query) {
             }
             logger.trace("result", result)
             resolve(result, client)
-        });
+        });*/
 
     })
 }
@@ -53,6 +55,7 @@ connect()
         logger.error(err)
     })
     .then((result, client) => {
+        logger.trace("in then of creating db");
         if (result.rows[0].exists === true) {
             logger.trace("db already exists")
             return Promise.resolve(result, client)
@@ -63,50 +66,50 @@ connect()
     })
     .catch(err => {
         logger.error(err)
-    }).then(() => {
-    //db should exist now, initialize Sequelize
-    const sequelize = new Sequelize(dbName, 'postgres', 'example', {
-        host: 'db',
-        dialect: 'postgres',
-
-        pool: {
-            max: 5,
-            min: 0,
-            acquire: 30000,
-            idle: 10000
-        },
-
-        // http://docs.sequelizejs.com/manual/tutorial/querying.html#operators
-        operatorsAliases: false
-    });
-
-    const u = {
-        username: Sequelize.STRING,
-        birthday: Sequelize.DATE
-    }
-
-    const User = sequelize.define('user', u);
-
-
-    sequelize.sync()
-        .catch(e => logger.error(e))
-        .then(() => User.create({
-            username: 'janedoe',
-            birthday: new Date(1980, 6, 20)
-        }))
-        .catch(e => logger.error(e))
-        .then(jane => {
-            console.log(jane.toJSON());
-        })
-        .catch(e => logger.error(e));
-
-    User.findAll().then(users => {
-        logger.info("users.length ", users.length)
     })
-        .catch(e => logger.error(e))
-    logger.info("closing pg connection")
-    pool.end(); // close the connection
+logger.trace("after pg promise chain")
+//db should exist now, initialize Sequelize
+const sequelize = new Sequelize(dbName, 'postgres', 'example', {
+    host: 'db',
+    dialect: 'postgres',
+
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+    },
+
+    // http://docs.sequelizejs.com/manual/tutorial/querying.html#operators
+    operatorsAliases: false
 });
+
+const u = {
+    username: Sequelize.STRING,
+    birthday: Sequelize.DATE
+}
+
+const User = sequelize.define('user', u);
+
+
+sequelize.sync()
+    .catch(e => logger.error(e))
+    .then(() => User.create({
+        username: 'janedoe',
+        birthday: new Date(1980, 6, 20)
+    }))
+    .catch(e => logger.error(e))
+    .then(jane => {
+        console.log(jane.toJSON());
+    })
+    .catch(e => logger.error(e));
+
+User.findAll().then(users => {
+    logger.info("users.length ", users.length)
+})
+    .catch(e => logger.error(e))
+logger.info("closing pg connection")
+pool.end(); // close the connection
 
 
 const app = express()
