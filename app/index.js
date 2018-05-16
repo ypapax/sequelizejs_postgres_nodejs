@@ -1,5 +1,7 @@
 const Sequelize = require('sequelize');
-const sequelize = new Sequelize('database', 'postgres', 'example', {
+const logger = require('tracer').colorConsole();
+const express = require("express");
+const sequelize = new Sequelize('database3', 'postgres', 'example', {
     host: 'db',
     dialect: 'postgres',
 
@@ -27,3 +29,9 @@ sequelize.sync()
     .then(jane => {
         console.log(jane.toJSON());
     });
+
+const app = express()
+
+const port=8080;
+logger.info("Listening...", port)
+app.listen(port)

@@ -2,13 +2,17 @@
 set -ex
 
 build(){
-	pushd app
-	docker build -t sequelizejs_postgres_nodejs:1.0 .
-	popd
+	# rebuild images if docker files changed
+	# https://github.com/docker/compose/issues/1487#issuecomment-107048571
+	docker-compose build
 }
 
 up(){
     docker-compose up
+}
+
+upnode(){
+    docker-compose up nodejs_app
 }
 
 background(){
@@ -25,5 +29,10 @@ stop(){
 
 postgres_run(){
 	docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+}
+
+ssh_to_node_container() {
+	local containerID=$(docker ps | grep nodejs_app | awk '{print $1}')
+	docker exec -ti $containerID /bin/bash
 }
 $@
