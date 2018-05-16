@@ -26,13 +26,16 @@ const User = sequelize.define('user', u);
 
 
 sequelize.sync()
+    .catch(e => logger.error(e))
     .then(() => User.create({
         username: 'janedoe',
         birthday: new Date(1980, 6, 20)
-    })).catch(e => logger.error(e))
+    }))
+    .catch(e => logger.error(e))
     .then(jane => {
         console.log(jane.toJSON());
-    });
+    })
+    .catch(e => logger.error(e));
 
 const app = express()
 
