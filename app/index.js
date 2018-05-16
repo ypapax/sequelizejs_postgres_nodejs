@@ -5,7 +5,7 @@ const pg = require('pg');
 const util = require('util')
 const dbName = 'database4',
     username = 'postgres',
-    password = 'example',
+    password = 'example2',
     host = 'db'
 const config = {
     user: username,
@@ -20,7 +20,7 @@ function connect() {
         logger.info("connecting to postgres db", dbName)
         pool.connect(function (err, client, done) {
             if (err) {
-                logger.error(err)
+                logger.trace(err)
                 return reject(new Error(err));
             }
             return resolve(client)
@@ -44,7 +44,12 @@ function pgQuery(client, query) {
 }
 
 async function createDbInsertSelect() {
-    const client = await connect()
+    let client;
+    try {
+        client = await connect()
+    } catch (e) {
+        throw(new Error(e))
+    }
     const result = await pgQuery(client, util.format(`select exists(
  SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower('%s')
 );`, dbName))
