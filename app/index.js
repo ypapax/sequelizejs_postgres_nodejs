@@ -43,7 +43,7 @@ function pgQuery(client, query) {
     })
 }
 
-async function doAll() {
+async function createDbInsertSelect() {
     const client = await connect()
     const result = await pgQuery(client, util.format(`select exists(
  SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower('%s')
@@ -76,28 +76,22 @@ async function doAll() {
 
     const User = sequelize.define('user', u);
 
-
-    sequelize.sync()
-        .catch(e => logger.error(e))
-        .then(() => User.create({
-            username: 'janedoe',
-            birthday: new Date(1980, 6, 20)
-        }))
-        .catch(e => logger.error(e))
-        .then(jane => {
-            console.log(jane.toJSON());
-        })
-        .catch(e => logger.error(e));
-
-    User.findAll().then(users => {
-        logger.info("users.length ", users.length)
+    logger.info("syncing db tables and models")
+    await sequelize.sync()
+    logger.info("inserting a new row")
+    await User.create({
+        username: 'janedoe',
+        birthday: new Date(1980, 6, 20)
     })
-        .catch(e => logger.error(e))
+
+    const users = await User.findAll()
+    logger.info("users.length ", users.length)
     logger.info("closing pg connection")
     pool.end(); // close the connection
+    logger.info("connection is closed")
 }
 
-doAll()
+createDbInsertSelect()
 
 
 const app = express()
