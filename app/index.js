@@ -2,6 +2,7 @@ const Sequelize = require('sequelize');
 const logger = require('tracer').colorConsole();
 const express = require("express");
 const pg = require('pg');
+const util = require('util')
 const dbName = 'database3',
     username = 'postgres',
     password = 'example',
@@ -30,23 +31,39 @@ function connect() {
 function pgQuery(client, query) {
     return new Promise((resolve, reject) => {
         logger.trace("query to pg", query)
-        client.query(query, function (err) {
+        client.query(query, function (err, result) {
             if (err) {
-                reject(err)
+                reject(err, client)
                 return
             }
-            resolve("ok")
+            logger.trace("result", result)
+            resolve(result, client)
         });
 
     })
 }
 
-connect().then((client) => {
-    logger.info("creating db ", dbName)
-    return pgQuery(client, 'CREATE DATABASE ' + dbName)
-}).catch(err => {
-    logger.error(err)
-}).then(() => {
+connect()
+    .then((client) => {
+        return pgQuery(client, util.format(`select exists(
+ SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower('%s')
+);`, dbName))
+    })
+    .catch(err => {
+        logger.error(err)
+    })
+    .then((result, client) => {
+        if (result.rows[0].exists === true) {
+            logger.trace("db already exists")
+            return Promise.resolve(result, client)
+        }
+        logger.log("db exists result", result)
+        logger.info("creating db ", dbName)
+        return pgQuery(client, 'CREATE DATABASE ' + dbName)
+    })
+    .catch(err => {
+        logger.error(err)
+    }).then(() => {
     //db should exist now, initialize Sequelize
     const sequelize = new Sequelize(dbName, 'postgres', 'example', {
         host: 'db',
