@@ -1,7 +1,8 @@
 const Sequelize = require('sequelize');
 const logger = require('tracer').colorConsole();
 const express = require("express");
-const sequelize = new Sequelize('database3', 'postgres', 'example', {
+const dbName = 'database3'
+const sequelize = new Sequelize(dbName, 'postgres', 'example', {
     host: 'db',
     dialect: 'postgres',
 
@@ -16,16 +17,19 @@ const sequelize = new Sequelize('database3', 'postgres', 'example', {
     operatorsAliases: false
 });
 
-const User = sequelize.define('user', {
+const u = {
     username: Sequelize.STRING,
     birthday: Sequelize.DATE
-});
+}
+
+const User = sequelize.define('user', u);
+
 
 sequelize.sync()
     .then(() => User.create({
         username: 'janedoe',
         birthday: new Date(1980, 6, 20)
-    }))
+    })).catch(e => logger.error(e))
     .then(jane => {
         console.log(jane.toJSON());
     });
