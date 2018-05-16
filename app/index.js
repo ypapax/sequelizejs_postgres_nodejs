@@ -3,7 +3,7 @@ const logger = require('tracer').colorConsole();
 const express = require("express");
 const pg = require('pg');
 const util = require('util')
-const dbName = 'database3',
+const dbName = 'database4',
     username = 'postgres',
     password = 'example',
     host = 'db'
@@ -54,8 +54,8 @@ async function createDbInsertSelect() {
         await pgQuery(client, 'CREATE DATABASE ' + dbName)
     }
     //db should exist now, initialize Sequelize
-    const sequelize = new Sequelize(dbName, 'postgres', 'example', {
-        host: 'db',
+    const sequelize = new Sequelize(dbName, username, password, {
+        host: host,
         dialect: 'postgres',
 
         pool: {
@@ -89,9 +89,12 @@ async function createDbInsertSelect() {
     logger.info("closing pg connection")
     pool.end(); // close the connection
     logger.info("connection is closed")
+    return "ok"
 }
 
 createDbInsertSelect()
+    .then((result) => logger.info(result))
+    .catch((err) => logger.error(err))
 
 
 const app = express()
