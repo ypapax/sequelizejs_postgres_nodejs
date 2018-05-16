@@ -14,14 +14,19 @@ const config = {
 // pool takes the object above -config- as parameter
 const pool = new pg.Pool(config); // https://stackoverflow.com/a/47308439/1024794
 
-logger.info("connecting to postgres db", dbName)
-pool.connect(function (err, client, done) {
-    // create the db and ignore any errors, for example if it already exists.
-    // https://stackoverflow.com/a/32212001/1024794
-    if (err) {
-        logger.error(err)
-        return
-    }
+function connect(){
+    return new Promise((resolve, reject) => {
+        logger.info("connecting to postgres db", dbName)
+        pool.connect(function (err, client, done) {
+            if (err) {
+                logger.error(err)
+                return reject(new Error(err));
+            }
+            return resolve(client)
+        })
+    })
+}
+connect().then((client) => {
     logger.info("creating db ", dbName)
     client.query('CREATE DATABASE ' + dbName, function (err) {
         if (err) {
@@ -78,7 +83,7 @@ pool.connect(function (err, client, done) {
         logger.info("closing pg connection")
         pool.end(); // close the connection
     });
-});
+}).catch(err=>{logger.error(err)});
 
 
 const app = express()
