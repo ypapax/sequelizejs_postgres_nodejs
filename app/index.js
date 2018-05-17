@@ -127,7 +127,72 @@ async function doAll() {
         logger.error(err)
         throw new Error(err)
     }
+
+    [err] = await to(relations(sequelize))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
     return "ok"
+}
+
+async function belongsTo(sequelize) {
+    const Player = sequelize.define('player', {
+        name: Sequelize.STRING
+    })
+    const Team = sequelize.define('team', {
+        name: Sequelize.STRING
+    })
+    Player.belongsTo(Team)
+    let err;
+    [err] = await to(sequelize.sync({force: true}));
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    let team;
+    [err, team] = await to(Team.create({
+        name: "giants"
+    }));
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.trace("team created", team)
+        [err] = await to(Player.create({
+        name: "Maxim",
+        teamId: team.id
+    }));
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    [err, players] = await to(Player.findAll())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.info("players", players)
+    return players
+}
+
+async function oneToOne(sequelize) {
+    let err;
+    [err] = await to(belongsTo(sequelize))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+}
+
+async function relations(sequelize) {
+    // http://docs.sequelizejs.com/manual/tutorial/associations.html
+    let err;
+    [err] = await to(oneToOne(sequelize))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
 }
 
 async function projectsTasks(sequelize) {
@@ -148,8 +213,8 @@ async function projectsTasks(sequelize) {
         logger.error(err)
         throw new Error(err)
     }
-    for (let i = 1; i<=2; i++) {
-        const project = Project.build({title: "project "+i});
+    for (let i = 1; i <= 2; i++) {
+        const project = Project.build({title: "project " + i});
         [err] = await to(project.save())
         if (err) {
             logger.error("project", i, "error", err)
@@ -164,7 +229,7 @@ async function projectsTasks(sequelize) {
         logger.error(err)
         throw new Error(err)
     }
-    projects = projects.map(p=>p.dataValues)
+    projects = projects.map(p => p.dataValues)
     logger.trace("projects", projects)
     const task = Task.build({title: "very important task", ProjectId: projects[0].id})
     logger.info("task.title", task.title);
