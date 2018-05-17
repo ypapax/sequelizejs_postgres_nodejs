@@ -143,14 +143,28 @@ async function projectsTasks(sequelize) {
     });
 
     Project.hasMany(Task);
-    [err] = await to(sequelize.sync(/*{force: true}*/)) // force drops tables if exist
+    [err] = await to(sequelize.sync({force: true})) // force drops tables if exist
     if (err) {
         logger.error(err)
         throw new Error(err)
     }
-    const task = Task.build({title: "very important task"})
-    logger.info("task.title", task.title)
-        [err] = await to(task.save())
+    const project = Project.build({title: "project one"});
+    [err] = await to(project.save())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    let projects;
+    [err, projects] = await to(Project.all());
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    projects = projects.map(p=>p.dataValues)
+    logger.trace("projects", projects)
+    const task = Task.build({title: "very important task", ProjectId: project.id})
+    logger.info("task.title", task.title);
+    [err] = await to(task.save())
     if (err) {
         logger.trace(err)
         throw new Error(err)
@@ -162,6 +176,9 @@ async function projectsTasks(sequelize) {
         throw new Error(err)
     }
     logger.trace("tasks.length", tasks.length)
+    tasks = tasks.map(t => t.dataValues)
+    logger.info("tasks", tasks)
+    return tasks
 }
 
 doAll()
