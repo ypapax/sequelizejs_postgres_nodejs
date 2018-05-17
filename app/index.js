@@ -150,7 +150,7 @@ async function belongsTo(sequelize) {
             primaryKey: true
         }
     })
-    Player.belongsTo(Team)
+    Player.belongsTo(Team, {as: "gang"})
     let err;
     [err] = await to(sequelize.sync({force: true}));
     if (err) {
@@ -170,7 +170,7 @@ async function belongsTo(sequelize) {
     logger.trace("team created", team.dataValues);
     [err, player] = await to(Player.create({
         name: "Maxim",
-        teamUuid: team.uuid
+        gangUuid: team.uuid
     }));
     if (err) {
         logger.error(err)
@@ -182,7 +182,8 @@ async function belongsTo(sequelize) {
         logger.error(err)
         throw new Error(err)
     }
-    logger.info("players.length", players.length)
+    players = players.map(p => p.dataValues)
+    logger.info("players", players)
     return players
 }
 
