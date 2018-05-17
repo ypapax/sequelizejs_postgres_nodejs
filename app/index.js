@@ -148,12 +148,16 @@ async function projectsTasks(sequelize) {
         logger.error(err)
         throw new Error(err)
     }
-    const project = Project.build({title: "project one"});
-    [err] = await to(project.save())
-    if (err) {
-        logger.error(err)
-        throw new Error(err)
+    for (let i = 1; i<=2; i++) {
+        const project = Project.build({title: "project "+i});
+        [err] = await to(project.save())
+        if (err) {
+            logger.error("project", i, "error", err)
+            throw new Error(err)
+        }
     }
+
+
     let projects;
     [err, projects] = await to(Project.all());
     if (err) {
@@ -162,7 +166,7 @@ async function projectsTasks(sequelize) {
     }
     projects = projects.map(p=>p.dataValues)
     logger.trace("projects", projects)
-    const task = Task.build({title: "very important task", ProjectId: project.id})
+    const task = Task.build({title: "very important task", ProjectId: projects[0].id})
     logger.info("task.title", task.title);
     [err] = await to(task.save())
     if (err) {
