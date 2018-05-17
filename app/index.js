@@ -14,6 +14,9 @@ const config = {
     host: host
 };
 
+const uuidv1 = require('uuid/v1');
+
+
 function connect() {
     return new Promise((resolve, reject) => {
         // pool takes the object above -config- as parameter
@@ -141,7 +144,11 @@ async function belongsTo(sequelize) {
         name: Sequelize.STRING
     })
     const Team = sequelize.define('team', {
-        name: Sequelize.STRING
+        name: Sequelize.STRING,
+        uuid: {
+            type: Sequelize.UUID,
+            primaryKey: true
+        }
     })
     Player.belongsTo(Team)
     let err;
@@ -152,27 +159,30 @@ async function belongsTo(sequelize) {
     }
     let team;
     [err, team] = await to(Team.create({
-        name: "giants"
+        name: "giants",
+        uuid: uuidv1()
     }));
     if (err) {
         logger.error(err)
         throw new Error(err)
     }
-    logger.trace("team created", team)
-        [err] = await to(Player.create({
+    let player
+    logger.trace("team created", team.dataValues);
+    [err, player] = await to(Player.create({
         name: "Maxim",
-        teamId: team.id
+        teamUuid: team.uuid
     }));
     if (err) {
         logger.error(err)
         throw new Error(err)
     }
+    logger.trace("player is created", player.dataValues);
     [err, players] = await to(Player.findAll())
     if (err) {
         logger.error(err)
         throw new Error(err)
     }
-    logger.info("players", players)
+    logger.info("players.length", players.length)
     return players
 }
 
