@@ -122,7 +122,46 @@ async function doAll() {
         throw new Error(err)
     }
     // http://www.redotheweb.com/2013/02/20/sequelize-the-javascript-orm-in-practice.html
+    [err] = await to(projectsTasks(sequelize))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    return "ok"
+}
 
+async function projectsTasks(sequelize) {
+    let err;
+    const Project = sequelize.define('Project', {
+        title: Sequelize.STRING,
+        description: Sequelize.TEXT,
+    });
+    const Task = sequelize.define('Task', {
+        title: Sequelize.STRING,
+        description: Sequelize.TEXT,
+        deadline: Sequelize.DATE
+    });
+
+    Project.hasMany(Task);
+    [err] = await to(sequelize.sync(/*{force: true}*/)) // force drops tables if exist
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    const task = Task.build({title: "very important task"})
+    logger.info("task.title", task.title)
+        [err] = await to(task.save())
+    if (err) {
+        logger.trace(err)
+        throw new Error(err)
+    }
+    let tasks
+    [err, tasks] = await to(Task.all())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.trace("tasks.length", tasks.length)
 }
 
 doAll()
