@@ -144,13 +144,16 @@ async function belongsTo(sequelize) {
         name: Sequelize.STRING
     })
     const Team = sequelize.define('team', {
-        name: Sequelize.STRING,
+        teamName: {
+            type: Sequelize.STRING,
+            primaryKey: true
+        },
         uuid: {
             type: Sequelize.UUID,
             primaryKey: true
         }
     })
-    Player.belongsTo(Team, {foreignKey: "block"})
+    Player.belongsTo(Team, {foreignKey: "block", targetKey: "teamName"})
     let err;
     [err] = await to(sequelize.sync({force: true}));
     if (err) {
@@ -159,7 +162,7 @@ async function belongsTo(sequelize) {
     }
     let team;
     [err, team] = await to(Team.create({
-        name: "giants",
+        teamName: "giants",
         uuid: uuidv1()
     }));
     if (err) {
@@ -170,7 +173,7 @@ async function belongsTo(sequelize) {
     logger.trace("team created", team.dataValues);
     [err, player] = await to(Player.create({
         name: "Maxim",
-        block: team.uuid
+        block: team.teamName
     }));
     if (err) {
         logger.error(err)
