@@ -195,7 +195,7 @@ async function hasOneFather(sequelize) {
     const Person = sequelize.define('person', {
         name: Sequelize.STRING
     })
-    Person.hasOne(Person, {as: 'Son', foreignKey: 'dadID'});
+    Person.hasOne(Person, {as: 'Child', foreignKey: 'dadID'});
     [err] = await to(sequelize.sync({force: true}));
     if (err) {
         logger.error(err)
@@ -226,15 +226,36 @@ async function hasOneFather(sequelize) {
         logger.error(err)
         throw new Error(err)
     }
-    people = people.map(p=>p.dataValues)
+    people = people.map(p => p.dataValues)
     logger.trace("people", people)
     let son;
-    [err, son] = await to(andrey.getSon())
+    [err, son] = await to(andrey.getChild())
     if (err) {
         logger.error(err)
         throw new Error(err)
     }
     logger.trace("andrey's son", son.dataValues)
+    let marina;
+    [err, marina] = await to(Person.create({
+        name: "Marina"
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    [err] = await to(andrey.setChild(marina))
+    if (err) {
+        logger.error(err);
+        throw new Error(err)
+    }
+    [err, people] = await to(Person.findAll())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    people = people.map(p => p.dataValues)
+    logger.trace("people", people)
+    logger.trace("dadID of maxim is dropped automatically because I suppose it's hasOne relation")
 }
 
 async function hasOne(sequelize) {
