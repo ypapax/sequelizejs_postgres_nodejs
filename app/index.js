@@ -190,9 +190,59 @@ async function belongsTo(sequelize) {
     return players
 }
 
+async function hasOne(sequelize) {
+    let err;
+    const Project = sequelize.define('prj', {
+        name: Sequelize.STRING
+    })
+    const User = sequelize.define('usr', {
+        length: Sequelize.INTEGER
+    })
+    Project.hasOne(User, {foreignKey: "project_id"});
+    [err] = await to(sequelize.sync({force: true}))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+
+    let project;
+    [err, project] = await to(Project.create({
+        name: "project 1"
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.trace("project", project.dataValues)
+    // 2018-05-18T03:58:07+0000 <trace> index.js:216 (hasOne) project { id: 1,
+    //   name: 'project 1',
+    //   updatedAt: 2018-05-18T03:58:07.870Z,
+    //   createdAt: 2018-05-18T03:58:07.870Z }
+    let usr;
+    [err, usr] = await to(User.create({
+        username: "Maxim",
+        project_id: project.dataValues.id
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.trace("usr created", usr.dataValues);
+    // 2018-05-18T03:58:07+0000 <trace> index.js:227 (hasOne) usr created { id: 1,
+    //   project_id: 1,
+    //   updatedAt: 2018-05-18T03:58:07.875Z,
+    //   createdAt: 2018-05-18T03:58:07.875Z,
+    //   length: null }
+}
+
 async function oneToOne(sequelize) {
     let err;
     [err] = await to(belongsTo(sequelize))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    [err] = await to(hasOne(sequelize))
     if (err) {
         logger.error(err)
         throw new Error(err)
