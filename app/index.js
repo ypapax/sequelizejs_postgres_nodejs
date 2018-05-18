@@ -195,7 +195,7 @@ async function hasOneFather(sequelize) {
     const Person = sequelize.define('person', {
         name: Sequelize.STRING
     })
-    Person.hasOne(Person, {as: 'father', foreignKey: 'dadID'});
+    Person.hasOne(Person, {as: 'Son', foreignKey: 'dadID'});
     [err] = await to(sequelize.sync({force: true}));
     if (err) {
         logger.error(err)
@@ -219,7 +219,22 @@ async function hasOneFather(sequelize) {
         logger.error(err)
         throw new Error(err)
     }
-    logger.trace("person created", maxim.dataValues)
+    logger.trace("person created", maxim.dataValues);
+    let people;
+    [err, people] = await to(Person.findAll())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    people = people.map(p=>p.dataValues)
+    logger.trace("people", people)
+    let son;
+    [err, son] = await to(andrey.getSon())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.trace("andrey's son", son.dataValues)
 }
 
 async function hasOne(sequelize) {
