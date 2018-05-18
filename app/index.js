@@ -190,6 +190,38 @@ async function belongsTo(sequelize) {
     return players
 }
 
+async function hasOneFather(sequelize) {
+    let err;
+    const Person = sequelize.define('person', {
+        name: Sequelize.STRING
+    })
+    Person.hasOne(Person, {as: 'father', foreignKey: 'dadID'});
+    [err] = await to(sequelize.sync({force: true}));
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    let andrey;
+    [err, andrey] = await to(Person.create({
+        name: 'Andrey'
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.trace("andrey created", andrey.dataValues)
+    let maxim;
+    [err, maxim] = await to(Person.create({
+        name: 'Maxim',
+        dadID: andrey.id
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.trace("person created", maxim.dataValues)
+}
+
 async function hasOne(sequelize) {
     let err;
     const Project = sequelize.define('prj', {
@@ -243,6 +275,11 @@ async function oneToOne(sequelize) {
         throw new Error(err)
     }
     [err] = await to(hasOne(sequelize))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    [err] = await to(hasOneFather(sequelize))
     if (err) {
         logger.error(err)
         throw new Error(err)
