@@ -303,6 +303,82 @@ async function hasOne(sequelize) {
     //   length: null }
 }
 
+async function hasOneTeamGame(sequelize) {
+    // http://docs.sequelizejs.com/manual/tutorial/associations.html
+    // If you need to join a table twice you can double join the same table
+    // Team.hasOne(Game, {as: 'HomeTeam', foreignKey : 'homeTeamId'});
+    // Team.hasOne(Game, {as: 'AwayTeam', foreignKey : 'awayTeamId'});
+    //
+    // Game.belongsTo(Team);
+    const Team = sequelize.define('team', {
+        name: Sequelize.STRING
+    })
+    const Game = sequelize.define('game', {
+        name: Sequelize.STRING,
+        score: Sequelize.STRING
+    })
+    Team.hasOne(Game, {as: "HomeTeam", foreignKey: "homeTeamID"})
+    Team.hasOne(Game, {as: "AwayTeam", foreignKey: "awayTeamID"})
+    Game.belongsTo(Team) // why do we need this?
+    // it just gives teamId field for the game?
+    // but why do we need this field
+    // when we already got fields homeTeamID and awayTeamID?
+
+    // 2018-05-18T06:20:39+0000 <info> index.js:356 (hasOneTeamGame) game { id: 1,
+    //   score: '5:5',
+    //   updatedAt: 2018-05-18T06:20:39.942Z,
+    //   createdAt: 2018-05-18T06:20:39.942Z,
+    //   name: null,
+    //   homeTeamID: null,
+    //   awayTeamID: null,
+    //   teamId: null }
+    let err;
+    [err] = await to(sequelize.sync({force: true}))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    let team1;
+    [err, team1] = await to(Team.create({
+        name: "Dream"
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    let team2;
+    [err, team2] = await to(Team.create({
+        name: "Socks"
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.info("team1", team1.dataValues)
+    logger.info("team2", team2.dataValues)
+    let game;
+    [err, game] = await to(Game.create({
+        score: "5:5"
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    // weird that it's not "game.setHomeTeam(team1)"
+    // isn't it, yes it is
+    [err] = await to(team1.setHomeTeam(game))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    [err] = await to(team2.setAwayTeam(game))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.info("game", game.dataValues)
+}
+
 async function oneToOne(sequelize) {
     let err;
     [err] = await to(belongsTo(sequelize))
@@ -316,6 +392,11 @@ async function oneToOne(sequelize) {
         throw new Error(err)
     }
     [err] = await to(hasOneFather(sequelize))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    [err] = await to(hasOneTeamGame(sequelize))
     if (err) {
         logger.error(err)
         throw new Error(err)
