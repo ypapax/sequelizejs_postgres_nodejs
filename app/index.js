@@ -401,6 +401,121 @@ async function oneToOne(sequelize) {
         logger.error(err)
         throw new Error(err)
     }
+    [err] = await to(hasOneVsBelongsTo(sequelize))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+}
+
+async function hasOneVsBelongsTo(sequelize) {
+    // http://docs.sequelizejs.com/manual/tutorial/associations.html
+
+    // Difference between HasOne and BelongsTo
+    // In Sequelize 1:1 relationship can be set using HasOne and BelongsTo. They are suitable for different scenarios. Lets study this difference using an example.
+    //
+    //     Suppose we have two tables to link Player and Team. Lets define their models.
+    function definePlayerTeam() {
+        const Player = sequelize.define('plr', {
+            name: Sequelize.STRING
+        })
+        const Team = sequelize.define('tm', {
+            name: Sequelize.STRING
+        })
+        return [Player, Team]
+    }
+
+    let Player, Team;
+    [Player, Team] = definePlayerTeam()
+    Player.belongsTo(Team, {as: "belongsToTeam"})
+    Team.hasOne(Player, {as: "hasOneTeam"})
+    // 2018-05-18T06:43:15+0000 <info> index.js:449 (hasOneVsBelongsTo) player { id: 1,
+    //   name: 'Maxim',
+    //   updatedAt: 2018-05-18T06:43:15.738Z,
+    //   createdAt: 2018-05-18T06:43:15.738Z,
+    //   belongsToTeamId: null,
+    //   hasOneTeamId: null }
+    // Executing (default): INSERT INTO "tms" ("id","name","createdAt","updatedAt") VALUES (DEFAULT,'Dream','2018-05-18 06:43:15.741 +00:00','2018-05-18 06:43:15.741 +00:00') RETURNING *;
+    // 2018-05-18T06:43:15+0000 <info> index.js:458 (hasOneVsBelongsTo) team created { id: 1,
+    //   name: 'Dream',
+    //   updatedAt: 2018-05-18T06:43:15.741Z,
+    //   createdAt: 2018-05-18T06:43:15.741Z }
+    let err;
+    [err] = await to(sequelize.sync({force: true}))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+
+    async function addPlayerAndTeam() {
+        let player;
+        [err, player] = await to(Player.create({
+            name: "Maxim"
+        }))
+        if (err) {
+            logger.error(err)
+            throw new Error(err)
+        }
+        logger.info("player", player.dataValues)
+        let team;
+        [err, team] = await to(Team.create({
+            name: "Dream"
+        }))
+        if (err) {
+            logger.error(err)
+            throw new Error(err)
+        }
+        logger.info("team created", team.dataValues)
+    }
+
+    [err] = await to(addPlayerAndTeam())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    // Here is an example demonstrating use cases of BelongsTo and HasOne.
+    //
+    //     const Player = this.sequelize.define('player', {/* attributes */})
+    // const Coach  = this.sequelize.define('coach', {/* attributes */})
+    // const Team  = this.sequelize.define('team', {/* attributes */});
+    // Suppose our Player model has information about its team as teamId column. Information about each Team's Coach is stored in the Team model as coachId column. These both scenarios requires different kind of 1:1 relation because foreign key relation is present on different models each time.
+    const Coach = sequelize.define('coach', {
+        name: Sequelize.STRING,
+        age: Sequelize.INTEGER
+    });
+    [Player, Team] = definePlayerTeam()
+
+    Player.belongsTo(Team)  // `teamId` will be added on Player / Source model
+    Coach.hasOne(Team);  // `coachId` will be added on Team / Target model
+    [err] = await to(sequelize.sync({force: true}))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+
+    let coach;
+    [err, coach] = await to(Coach.create({
+        name: "coach 1",
+        age: 77
+    }))
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    logger.info("coach", coach.dataValues);
+    [err] = await to(addPlayerAndTeam())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    let teams;
+    [err, teams] = await to(Team.findAll())
+    if (err) {
+        logger.error(err)
+        throw new Error(err)
+    }
+    teams = teams.map(t => t.dataValues)
+    logger.info("teams", teams)
 }
 
 async function relations(sequelize) {
